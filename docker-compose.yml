@@ -1,0 +1,167 @@
+version: '3.7'
+services:
+    mongodb:
+        image: mongo:5.0.2
+        container_name: mongo
+        restart: always
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+            MONGO_API_USER: ${MONGO_API_USER}
+            MONGO_API_PASSWORD: ${MONGO_API_PASSWORD}
+        volumes:
+        - ./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+        - mongodbdata:/data/db
+        networks:
+        - backend
+
+    mongo-express:
+      image: mongo-express
+      restart: always
+      ports:
+        - 8887:8081
+      environment:
+        ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+        ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+        ME_CONFIG_MONGODB_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb/
+        ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+        ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+
+      depends_on: 
+          - mongodb
+      networks:
+        - frontend
+        - backend
+    
+    
+    client:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        tty: true
+        ports:
+            - 3000:3000
+        volumes: 
+            - ./frontend:/app
+        networks:
+            - frontend
+
+    api:
+        build: 
+            context: ./backend
+            dockerfile: Dockerfile
+        ports:
+            - "5000:5000"
+        environment:
+            MONGODB_HOST: mongodb
+            MONGODB_USERNAME: ${MONGO_API_USER}
+            MONGODB_PASSWORD: ${MONGO_API_PASSWORD}
+        volumes:
+            - backenddata:/app
+        networks:
+            - frontend
+            - backend
+    mail:
+            build: 
+                context: ./mailservice
+                dockerfile: Dockerfile
+            ports:
+                - "2020:2020"
+            tty: true
+            networks:
+                - backend
+                - frontend
+
+    orthanc:
+        build:
+            context: ./orthanc
+            dockerfile: Dockerfile
+        command: /run/secrets/  # Path to the configuration files (stored as secrets)
+        ports:
+            - "${ORTHANC_PORT}:${ORTHANC_PORT}"
+        secrets:
+            - orthanc.json
+        environment:
+            - ORTHANC_NAME=HelloWorld
+            - STONE_WEB_VIEWER_PLUGIN_ENABLED="true"
+            - DICOM_WEB_PLUGIN_ENABLED="true"
+            - VERBOSE_ENABLED="true"
+            - VERBOSE_STARTUP="true"
+            - ORTHANC_PYTHON_VERBOSE="true"
+            - ORTHAnc_PYTHON_SCRIPT="/etc/orthanc/plugin.py"
+            - ORTHANC_URL=${ORTHANC_URL}
+        volumes:
+            - orthancdata:/var/lib/orthanc/db/
+            - ./plugin/plugin.py:/etc/orthanc/plugin.py:ro
+        depends_on: 
+          - api
+          - client
+          - mail
+          - ftp
+          - mongodb
+        networks:
+            - backend
+
+    redis:
+        image: redis:6.0.6
+        container_name: redis
+        restart: always
+        ports:
+            - "6379:6379"
+        command: ["redis-server"]
+        networks:
+            - backend
+            - frontend
+            
+    ftp:
+        build: 
+            context: ./ftpservice
+            dockerfile: Dockerfile
+        ports:
+            - "3030:3030"
+        volumes:
+            - ftp_data:/ftpservice
+        tty: true
+
+    ftp_server:
+      container_name: ftp-server
+      image: garethflowers/ftp-server
+      environment:
+        - FTP_USER=${FTP_USERNAME}
+        - FTP_PASS=${FTP_PASSWORD}
+      restart: always
+      ports:
+        - '20-21:20-21/tcp'
+        - '40000-40009:40000-40009/tcp' 
+      volumes:
+          - ./shared:/home/${FTP_USERNAME}/shared
+
+secrets:
+  orthanc.json:
+    file: ./orthanc/orthanc.json
+networks:
+    frontend:
+        driver: bridge
+    backend:
+        driver: bridge
+volumes:
+    mongodbdata:
+        driver: local
+    backenddata:
+        driver: local
+        driver_opts:
+            o: bind
+            type: none
+            device: ./backend
+    ftp_data:
+        driver: local
+        driver_opts:
+            o: bind
+            type: none
+            device: ./ftpservice  
+    orthancdata:
+        driver: local
+    orthancplugin:
+        driver: local
+        

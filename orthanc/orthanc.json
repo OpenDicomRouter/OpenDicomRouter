@@ -1,0 +1,21 @@
+{
+    "Name" : "${ORTHANC_NAME} in Docker Compose",
+    "RemoteAccessAllowed" : true,
+    "Plugins" : [
+      "/usr/local/share/orthanc/plugins/"
+    ],
+   "RegisteredUsers" : {
+     "admin" : "fakepassword"
+    },
+    "PostgreSQL" : {
+      "EnableIndex" : false,
+      "EnableStorage" : false,
+      "Host" : "localhost",
+      "Port" : 5432,
+      "Database" : "orthanc",
+      "Username" : "postgres",
+      "Password" : "pgpassword"
+    },
+    "PythonScript": "/usr/local/share/orthanc/plugins/plugin.py",
+    "PythonVerbose":true
+  }

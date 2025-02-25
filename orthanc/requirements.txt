@@ -1,0 +1,4 @@
+pydicom
+pyorthanc
+requests
+redis

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+   An action was triggered because of the rules set in the Dicom Routing platform.<br/>
+   Your Message : <br> {{body}} 
+
+   <br/><br/>
+
+{% if link %}    
+    <![if !mso]><a
+            href="{{ link }}"
+            style="background-color:#3275B8;
+            border: 0; color:#ffffff; max-width:240px; width:100%;
+            display:block; font-family: sans-serif;
+            font-size:12px; line-height:44px; font-weight:normal;
+            text-align:center; text-decoration:none; -webkit-text-size-adjust:none;
+            mso-hide:all;">Open File </a>
+    <![endif]>
+{% endif %}
+{% endblock %}

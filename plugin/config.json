@@ -1,0 +1,6 @@
+{
+	"backend_url" : "orthanc",
+	"policies_endpoint" : "/policies",
+	"rules_endpoint" : "/rules",
+	"actions_endpoint" : "/actions"	
+}

@@ -1,0 +1,64 @@
+
+<html lang="en">
+<head>
+    <style>
+        table {
+        }
+
+        table, td {
+            border: 0;
+        }
+
+        td, th {
+            padding-right: 10px;
+        }
+
+        body, td, a, span, button {
+            font-family: sans-serif;
+            font-size: 12px;
+        }
+
+        th {
+            text-align: left;
+        }
+
+        .button {
+            background-color: #3275B8;
+            color: white;
+            padding: 12px;
+            display: block;
+            text-decoration: none;
+        }
+
+        .button:hover {
+            background-color: #0E396E;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+Hallo
+{% if to is iterable and not (to is string) %}
+    {% for recipient in to %}
+        {{ recipient }}
+        {% if not loop.last %}, {% endif %}
+    {% endfor %}
+{% else %}
+    {{ to }}
+{% endif %}
+<br/><br/>
+{% block content %}{% endblock %}
+
+
+<br/>
+<br/>
+<br/>
+Best<br/>
+Dicom Router<br/>
+<br/>
+<br/>
+<br/>
+
+-- This is an automatically generated E-Mail. Please don't respond.
+</body>
+</html>
